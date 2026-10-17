@@ -1,0 +1,18 @@
+{
+  "repository": "IvanSaratov/packages",
+  "site_url": "https://ivansaratov.github.io/packages",
+  "targets": [
+    {
+      "releasever": "44",
+      "arch": "x86_64"
+    }
+  ],
+  "packages": {
+    "finances": {
+      "key": "keys/RPM-GPG-KEY-finances",
+      "fingerprint": "596868911C1A853E42B542B6E9FDF6D61C3EE740",
+      "epoch": 0
+    }
+  },
+  "history_hours": 48
+}

@@ -1,42 +1,72 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Publish DNF repository
 
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  build:
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Build Fedora repository tools
+        run: docker build -t rpm-repository-tools tools
+
+      - name: Test signature policy and repository generation
+        run: |
+          docker run --rm --network none \
+            --mount "type=bind,source=$PWD,target=/source,readonly" \
+            rpm-repository-tools python3 -m unittest discover -s tests -v
+
+      - name: Generate verified public site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          docker run --rm --env GH_TOKEN \
+            --mount "type=bind,source=$PWD,target=/source,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP,target=/artifacts" \
+            rpm-repository-tools python3 scripts/build_repository.py \
+            --config /source/repository.json --output /artifacts/site
+
+      - name: Query and download through DNF
+        run: |
+          docker run --rm \
+            --mount "type=bind,source=$PWD,target=/source,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/site,target=/artifacts/site,readonly" \
+            rpm-repository-tools python3 tests/check_dnf.py --site /artifacts/site
+
+      - name: Upload only the generated site
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: ${{ runner.temp }}/site
+
   deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './site'
-      - name: Deploy to GitHub Pages
+      - name: Publish GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

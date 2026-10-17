@@ -3,11 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>IvanSaratov — пакеты</title>
+  <title>Пакеты IvanSaratov</title>
+  <style>
+    body { max-width: 58rem; margin: 2rem auto; padding: 0 1rem; font: 17px/1.6 system-ui, sans-serif; }
+    pre { padding: 1rem; overflow-x: auto; background: #f3f4f6; }
+    code { overflow-wrap: anywhere; }
+  </style>
 </head>
 <body>
-  <h1>Мой репозиторий пакетов</h1>
-  <p>Пакеты для Fedora.</p>
-  <p>Инструкции по подключению появятся здесь после настройки репозитория.</p>
+  <h1>Пакеты IvanSaratov для Fedora</h1>
+  <p>Личный репозиторий подписанных RPM. Поддерживается Fedora 44 x86_64.</p>
+  <h2>Подключение</h2>
+  <p>Скачайте <a href="ivansaratov-fedora.repo">файл репозитория</a>, проверьте его содержимое и установите:</p>
+  <pre><code>curl -fsSLO https://ivansaratov.github.io/packages/ivansaratov-fedora.repo
+cat ivansaratov-fedora.repo
+sudo install -m 0644 ivansaratov-fedora.repo /etc/yum.repos.d/ivansaratov-fedora.repo
+sudo dnf install finances</code></pre>
+  <p>При первом импорте ключа сверьте его отпечаток:</p>
+  <pre><code>596868911C1A853E42B542B6E9FDF6D61C3EE740</code></pre>
+  <p><a href="keys/RPM-GPG-KEY-finances">Открытый ключ подписи Finances</a>.</p>
+  <h2>Обновление</h2>
+  <pre><code>sudo dnf upgrade</code></pre>
+  <p>Установка и обновление пакетов выполняются через DNF без GitHub-токена.
+     Настройка базы данных и запуск приложения выполняются отдельно.</p>
+  <h2>Доступные пакеты</h2>
+  <!-- PACKAGES -->
+  <p><a href="repository-state.json">Состав репозитория в JSON</a> ·
+     <a href="fedora/44/x86_64/repodata/repomd.xml">Индекс RPM-MD</a> ·
+     <a href="https://github.com/IvanSaratov/packages/releases">Файлы RPM в Releases</a></p>
+  <h2>Проверка пакетов</h2>
+  <p>Для RPM включена проверка подписи: <code>gpgcheck=1</code>.
+     Метаданные передаются по HTTPS и не имеют отдельной GPG-подписи:
+     <code>repo_gpgcheck=0</code>.</p>
 </body>
 </html>
